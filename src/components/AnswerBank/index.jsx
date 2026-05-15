@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabase'
 import { normalizeEntry, nowISO } from '../../lib/utils'
 import AddEntryForm from './AddEntryForm'
 import EntryCard from './EntryCard'
+import CsvImport from './CsvImport'
 
 export default function AnswerBank({ entries, setEntries, userId }) {
   const [showAdd,    setShowAdd]    = useState(false)
@@ -58,6 +59,16 @@ export default function AnswerBank({ entries, setEntries, userId }) {
     setEntries(prev => prev.map(e => e.id === id ? { ...e, confidence, updated_at } : e))
   }
 
+  async function handleCsvImport(rows) {
+    const { data, error } = await supabase
+      .from('entries')
+      .insert(rows.map(r => ({ user_id: userId, ...r })))
+      .select()
+    if (error) return { error: error.message }
+    setEntries(prev => [...prev, ...(data || []).map(normalizeEntry)])
+    return { count: data?.length ?? 0 }
+  }
+
   return (
     <section>
       <div className="sec-head">
@@ -65,13 +76,14 @@ export default function AnswerBank({ entries, setEntries, userId }) {
         <span className="sec-count">{entries.length} {entries.length === 1 ? 'item' : 'items'}</span>
       </div>
 
-      <div style={{ marginTop: 16 }}>
+      <div style={{ marginTop: 16, display: 'flex', alignItems: 'flex-start', gap: 12, flexWrap: 'wrap' }}>
         <button
           className="btn btn-solid btn-sm"
           onClick={() => { setShowAdd(v => !v); if (!showAdd) cancelEdit() }}
         >
           + Add Q&amp;A
         </button>
+        <CsvImport onImport={handleCsvImport} />
       </div>
 
       {showAdd && (
