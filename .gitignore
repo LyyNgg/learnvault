@@ -1,0 +1,11 @@
+node_modules
+dist
+dist-ssr
+.DS_Store
+
+# Local env — never commit
+.env.local
+.env.*.local
+
+# Legacy credentials file (superseded by .env.local)
+config.js
